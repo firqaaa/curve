@@ -1,5 +1,6 @@
 import mlx.core as mx
 import numpy as np
+import pandas as pd
 
 
 class StandardScaler:
@@ -115,6 +116,8 @@ class LabelEncoder:
             self: Returns the instance itself
         """
         # Convert to list if input is MLX array
+        if isinstance(y, pd.Series):
+            y = y.values
         if isinstance(y, mx.array):
             y = y.tolist()
         
@@ -131,7 +134,7 @@ class LabelEncoder:
             # Find first occurence of this value in original data
             original_value = next(val for val in y if str(val) == class_str)
             self.classes_.append(original_value)
-            
+
         # Create mapping dictionaries
         self.class_to_index = {cls: idx for idx, cls in enumerate(self.classes_)}
         self.index_to_class = {idx: cls for idx, cls in enumerate(self.classes_)}
@@ -151,6 +154,9 @@ class LabelEncoder:
         if self.classes_ is None:
             raise ValueError("LabelEncoder has not been fitted yet.")
         
+        if isinstance(y, pd.Series):
+            y = y.values
+
         # Convert to list if input is MLX array
         if isinstance(y, mx.array):
             y = y.tolist()
@@ -191,6 +197,8 @@ class LabelEncoder:
         if self.classes_ is None:
             raise ValueError("LabelEncoder has not been fitted yet.")
         
+        if isinstance(y, pd.Series):
+            y = y.values
         # Convert to list if input is MLX array
         if isinstance(y, mx.array):
             y = y.tolist()
