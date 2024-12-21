@@ -1,6 +1,4 @@
-import numpy as np
 import mlx.core as mx
-import mlx.nn as nn
 import wandb
 
 
