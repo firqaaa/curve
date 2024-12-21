@@ -19,10 +19,25 @@ class StandardScaler:
         Args:
             X (mx.array): Input features of shape (n_samples, n_features)
         """
-        # Convert to MLX array if needed
-        if not isinstance(X, mx.array):
-            X = mx.array(X)
+
+        # Handle different input types
+        if isinstance(X, pd.DataFrame):
+            X_values = X.values.astype(np.float32)
+        elif isinstance(X, np.ndarray):
+            X_values = X.astype(np.float32)
+        elif isinstance(X, mx.array):
+            X_values = X
+        else:
+            raise ValueError(f"Unsupported input type: {type(X)}")
         
+        # Convert to MLX array
+        try:
+            X = mx.array(X_values)
+        except Exception as e:
+            print(f"Error converting to MLX array: {e}")
+            print(f"Input shape: {X_values.shape}, dtype: {X_values.dtype}")
+            raise
+
         # Store number of features
         self.n_features = X.shape[1]
 
@@ -50,9 +65,23 @@ class StandardScaler:
         if self.mean_ is None or self.std_ is None:
             raise ValueError("Scaler has not been fitted yet.")
         
-        # Convert to MLX array if needed
-        if not isinstance(X, mx.array):
-            X = mx.array(X)
+        # Handle different input types
+        if isinstance(X, pd.DataFrame):
+            X_values = X.values.astype(np.float32)
+        elif isinstance(X, np.ndarray):
+            X_values = X.astype(np.float32)
+        elif isinstance(X, mx.array):
+            X_values = X
+        else:
+            raise ValueError(f"Unsupported input type: {type(X)}")
+
+        # Convert to MLX array
+        try:
+            X = mx.array(X_values)
+        except Exception as e:
+            print(f"Error converting to MLX array: {e}")
+            print(f"Input shape: {X_values.shape}, dtype: {X_values.dtype}")
+            raise
         
         # Check feature dimension
         if X.shape[1] != self.n_features:
@@ -88,9 +117,23 @@ class StandardScaler:
         if self.mean_ is None or self.std_ is None:
             raise ValueError("Scaler has not been fitted yet.")
         
-        # Convert to MLX array if needed
-        if not isinstance(X_scaled, mx.array):
-            X_scaled = mx.array(X_scaled)
+        # Handle different input types
+        if isinstance(X_scaled, pd.DataFrame):
+            X_values = X_scaled.values.astype(np.float32)
+        elif isinstance(X_scaled, np.ndarray):
+            X_values = X_scaled.astype(np.float32)
+        elif isinstance(X_scaled, mx.array):
+            X_values = X_scaled
+        else:
+            raise ValueError(f"Unsupported input type: {type(X_scaled)}")
+
+        # Convert to MLX array
+        try:
+            X_scaled = mx.array(X_values)
+        except Exception as e:
+            print(f"Error converting to MLX array: {e}")
+            print(f"Input shape: {X_values.shape}, dtype: {X_values.dtype}")
+            raise
         
         # Inverse transform
         X = (X_scaled * self.std_) + self.mean_
