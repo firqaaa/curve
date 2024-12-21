@@ -267,4 +267,156 @@ class LabelEncoder:
         if self.classes_ is None:
             raise ValueError("LabelEncoder has not been fitted yet.")
         return self.classes_
+
+class MinMaxScaler:
+    def __init__(self, feature_range=(0, 1)):
+        """
+        Initialize MinMaxScaler
+
+        Args:
+            feature_range (tuple): Desired range of transformed data, default (0, 1)
+        """
+        self.feature_range = feature_range
+        self.min_ = None
+        self.max_ = None
+        self.scale_ = None
+        self.n_features = None
+        self.data_min_ = None
+        self.data_max_ = None
+        self.data_range_ = None
+
+    def fit(self, X):
+        """
+        Compute the minimum and maximum values to be used for scaling
+
+        Args:
+            X: Input data (DataFrame, ndarray, or mx.array)
+        
+        Returns:
+            self. Return the scaler object
+        """
+        # Handle different input types
+        if isinstance(X, pd.DataFrame):
+            X_values = X.values.astype(np.float32)
+        elif isinstance(X, np.ndarray):
+            X_values = X.astype(np.float32)
+        elif isinstance(X, mx.array):
+            X_values = X
+        else:
+            raise ValueError(f"Unsupported input type: {type(X)}")
+        
+        # Convert to MLX array
+        try:
+            X = mx.array(X_values)
+        except:
+            print(f"Error converting to MLX array: {e}")
+            print(f"Input shape: {X_values.shape}, dtype: {X_values.dtype}")
+            raise
     
+        # Store number of features
+        self.n_features = X.shape[1] if len(X.shape) > 1 else 1
+
+        # Compute data min and max
+        self.data_min_ = mx.min(X, axis=0)
+        self.data_max_ = mx.max(X, axis=0)
+
+        # Compute range
+        self.data_range_ = self.data_max_ - self.data_min_
+
+        # Handle constant features
+        self.data_range_ = mx.where(self.data_range_ == 0, 1.0, self.data_range_)
+
+        # Compute scale and min for transformation
+        feature_range_min, feature_range_max = self.feature_range
+        self.scale_ = (feature_range_max - feature_range_min) / self.data_range_
+        self.min_ = feature_range_min - self.data_min_ * self.scale_
+
+        return self
+    
+    def transform(self, X):
+        """
+        Scale features according to feature_range
+
+        Args:
+            X: Input data (DataFrame, ndarray, or mx.array)
+        
+        Returns:
+            mx.array: Scaled features
+        """
+        if self.scale_ is None:
+            raise ValueError("MinMaxScaler is not fitted yet. Call it first.")
+
+        # Handle different input types
+        if isinstance(X, pd.DataFrame):
+            X_values = X.values.astype(np.float32)
+        elif isinstance(X, np.ndarray):
+            X_values = X.astype(np.float32)
+        elif isinstance(X, mx.array):
+            X_values = X
+        else:
+            raise ValueError(f"Unsupported input types: {type(X)}")
+        
+        # Convert to MLX array
+        try:
+            X = mx.array(X_values)
+        except Exception as e:
+            print(f"Error converting to MLX array: {e}")
+            print(f"Input shape: {X_values.shape}, dtype: {X_values.dtype}")
+            raise
+        
+        # Check feature dimension
+        if len(X.shape) > 1 and X.shape[1] != self.n_features:
+            raise ValueError(f"Expected {self.n_features} features, got {X.shape[1]}")
+        
+        # Transform data
+        X_scaled = X * self.scale_ + self.min_
+
+        return X_scaled
+
+    def fit_transform(self, X):
+        """
+        Fit to data, then transform it
+
+        Args:
+            X: Input data (DataFrame, ndarray, or mx.array)
+        
+        Returns:
+            mx.array: Scaled features
+        """
+        return self.fit(X).transform(X)
+    
+    def inverse_transform(self, X_scaled):
+        """
+        Undo the scaling of X according to feature_range
+
+        Args:
+            X_scaled: Scaled input data (DataFrame, ndarray, or mx.array)
+        
+        Returns:
+            mx.array: Original features
+        """
+        if self.scale_ is None:
+            raise ValueError("MinMaxScaler is not fitted yet. Call it first.")
+        
+        # Handle different input types
+        if isinstance(X_scaled, pd.DataFrame):
+            X_values = X_scaled.values.astype(np.float32)
+        elif isinstance(X_scaled, np.ndarray):
+            X_values = X_scaled.astype(np.float32)
+        elif isinstance(X_scaled, mx.array):
+            X_values = X_scaled
+        else:
+            raise ValueError(f"Unsupported input type: {type(X_scaled)}")
+        
+        # Convert to MLX array
+        try:
+            X_scaled = mx.array(X_values)
+        except Exception as e:
+            print(f"Error converting to MLX array: {e}")
+            print(f"Input shape: {X_values.shape}, dtype: {X_values.dtype}")
+            raise
+
+        # Inverse transform
+        X = (X_scaled - self.min_) / self.scale_
+
+        return X
